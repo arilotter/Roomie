@@ -6,10 +6,15 @@ module.exports = {
       if (['pizza dog', 'garlic dog'].some(x => command.startsWith(x))) {
         doPlay('bork', command.replace(/\D/g, ''), callback);
       } else {
-        callback(null, false);
+        callback();
+      }
+    }, (command, callback) => {
+      if (command.includes('pizza don\'t you')) {
+        doPlay('pizza', 1, callback);
+      } else {
+        callback();
       }
     }
-    // 'ilovepizza': (command, callback) => doPlay('pizza', command, callback)
   ]
 };
 
