@@ -114,8 +114,8 @@ function oneshot (callback) {
 function hotword (callback) {
   const models = new snowboy.Models();
   models.add({
-    file: 'resources/panda.umdl',
-    hotwords: 'panda'
+    file: 'resources/alexa.umdl',
+    hotwords: 'alexa'
   });
   const detector = new snowboy.Detector({
     resource: 'resources/common.res',
@@ -126,7 +126,7 @@ function hotword (callback) {
   console.log('Listening for hotword');
   detector.on('hotword', (index, hotword) => {
     console.log(hotword);
-    if (hotword === 'panda') {
+    if (hotword === 'alexa') {
       playSound('activated');
       micStream.unpipe(detector); // stop listening for hotword in case the user says it in his query
       detectSpeech(micStream, (err, transcript) => {

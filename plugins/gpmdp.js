@@ -7,7 +7,7 @@ const some = require('async-some');
 const getCodeFile = host => path.join(__dirname, '.gpmdp-' + host);
 
 let server;
-const hosts = ['192.168.1.124', 'localhost'];
+const hosts = ['192.168.2.3', 'localhost'];
 
 function init () {
   return new Promise((resolve, reject) => {
@@ -178,7 +178,7 @@ module.exports = {
 
     // Pauses the music
     (command, cb) => {
-      if (['pause', 'paws', 'pawn'].map(start => controlEndings.map(end => start + end)).reduce((a, b) => a.concat(b), []).some(x => command === x)) {
+      if (['pause', 'paws', 'pawn', 'Mazda', 'cause'].map(start => controlEndings.map(end => start + end)).reduce((a, b) => a.concat(b), []).some(x => command === x)) {
         server.sendRequest('playback', 'getPlaybackState').then(ret => {
           if (ret.value === 2) {
             server.sendRequest('playback', 'playPause', (err) => cb(err, !err));

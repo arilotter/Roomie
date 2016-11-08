@@ -1,7 +1,7 @@
 const playSound = require('./play-sound');
 const some = require('async-some');
 
-const plugins = ['gpmdp', 'memesounds', 'smarthome', 'google'].map(name => require('./plugins/' + name));
+const plugins = ['gpmdp', 'phone', 'memesounds', 'smarthome', 'google'].map(name => require('./plugins/' + name));
 Promise.all(plugins.map(plugin => plugin.init())).then(() => {
   // Wait for all plugins to initialize.
   const commands = [];
@@ -20,13 +20,11 @@ Promise.all(plugins.map(plugin => plugin.init())).then(() => {
   ime((err, speech) => {
     if (err) throw err;
     console.info('Got command: ' + speech.transcript);
-    playSound('success', _ => {
-      some(commands, (command, callback) => command(speech.transcript.toLowerCase(), callback), (err, success) => {
-        if (err || !success) {
-          playSound('fail');
-          console.log(err || 'no suitible command found');
-        }
-      });
+    some(commands, (command, callback) => command(speech.transcript.toLowerCase(), callback), (err, success) => {
+      if (err || !success) {
+        playSound('fail');
+        console.log(err || 'no suitible command found');
+      }
     });
   });
   // console.log('killing plugins');

@@ -46,6 +46,7 @@ module.exports = {
             opusDecoder.on('error', callback);
             stream.pipe(opusDecoder);
           });
+          oggDecoder.on('error', callback);
 
           ttsStream.pipe(oggDecoder);
         });
