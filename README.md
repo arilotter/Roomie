@@ -9,4 +9,12 @@ Features:
 
 How to use it: Just install dependancies with `yarn` or `npm install`, then `node index.js`
 
-Then say "panda" to your computer, followed by a command like "How old is Obama's dog"
+Don't forget to add an api.ai API key in `credentials.json`
+```
+{
+	"apiai": "<key here>"
+}
+```
+
+Then speak `alexa` to your computer, followed by a command like "How old is Obama"
+You can alternatively use `node index.js how old is Obama`, but you'll receive an audio response
