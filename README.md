@@ -16,5 +16,6 @@ Don't forget to add an api.ai API key in `credentials.json`
 }
 ```
 
-Then speak `alexa` to your computer, followed by a command like "How old is Obama"
+Then speak `panda` to your computer, followed by a command like "How old is Obama"
+
 You can alternatively use `node index.js how old is Obama`, but you'll receive an audio response
