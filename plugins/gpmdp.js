@@ -128,7 +128,6 @@ function playSearch (query, cb) {
     const finish = err => cb(err);
     if (!search || Object.keys(search).length === 0) return cb(new Error('No matching music entities'));
     const trackMatches = (trackEntity, query) => {
-      console.log(trackEntity, query);
       if (!trackEntity) {
         return false;
       }
@@ -156,6 +155,7 @@ function playSearch (query, cb) {
 module.exports = {
   init,
   destroy: () => server.close(), // destroy server if it exists
+  hints: ['play', 'pause'],
   commands: [
     // Play a music entity or plays whatever is active
     ['music_play', (params, callback) => {

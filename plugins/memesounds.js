@@ -3,18 +3,17 @@ const sfx = require('sfx');
 module.exports = {
   commands: [
     ['garlicdog', (params, callback) => {
-      doPlay('bork', params.number, callback);
+      doPlay('bork', Math.min(params.number || 1, 20), callback);
     }],
     ['ilovepizza', (params, callback) => {
-      doPlay('pizza', params.number, callback);
+      doPlay('pizza', Math.min(params.number || 1, 20), callback);
     }]
   ]
 };
 
 function doPlay (sound, repeat, callback) {
-  const count = Math.min(repeat || 1, 20);
-  if (count <= 0) {
+  if (repeat <= 0) {
     return callback();
   }
-  sfx.play('sounds/' + sound + '.wav', () => doPlay(sound, count - 1, callback));
+  sfx.play('sounds/' + sound + '.wav', () => doPlay(sound, repeat - 1, callback));
 }

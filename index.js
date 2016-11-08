@@ -6,10 +6,11 @@ const apiai = require('apiai');
 const plugins = ['gpmdp', 'memesounds', 'google'].map(name => require('./plugins/' + name));
 
 // Wait for all plugins to initialize.
-Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(() => {
+Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ => {
   const commands = [];
   plugins.forEach(plugin => commands.push(...plugin.commands));
   const app = apiai(credentials.apiai);
+  const hints = [].concat(...plugins.filter(plugin => plugin.hints).map(plugin => plugin.hints));
 
   // input method: speech or text
   const textinput = process.argv.slice(2);
@@ -20,8 +21,9 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(() =
     ime = require('./speech');
   }
 
-  ime((err, speech) => {
+  ime(hints, (err, speech) => {
     if (err) throw err;
+    if (!speech.transcript) return;
     console.info(`Query: "${speech.transcript}"`);
     const aiRequest = app.textRequest(speech.transcript);
     aiRequest.on('response', response => {
@@ -43,11 +45,15 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(() =
     });
     aiRequest.end();
   });
-  // console.log('killing plugins');
-  // Promise.all(plugins.map(plugin => plugin.destroy ? plugin.destroy() : null));
 });
 
 function failCommand (err) {
   playSound('fail');
   console.log(err);
 }
+
+// Ctrl-C should always work
+process.on('SIGINT', _ => {
+  Promise.all(plugins.map(plugin => plugin.destroy ? plugin.destroy() : null));
+  process.exit();
+});

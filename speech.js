@@ -44,7 +44,7 @@ function getSpeechService (host, callback) {
   });
 }
 
-function detectSpeech (micStream, callback) {
+function detectSpeech (micStream, hints, callback) {
   async.waterfall([
     function (cb) {
       getSpeechService(host, cb);
@@ -55,7 +55,7 @@ function detectSpeech (micStream, callback) {
         micStream.unpipe(toRecognizeRequest);
         micStream.unpipe(call);
       }
-      const autoTimeout = setTimeout(() => {
+      const autoTimeout = setTimeout(_ => {
         teardown();
         callback(null, {transcript: '', confidence: 0});
       }, 6000);
@@ -84,7 +84,8 @@ function detectSpeech (micStream, callback) {
         streamingConfig: {
           config: {
             encoding: 'LINEAR16',
-            sampleRate: 16000
+            sampleRate: 16000,
+            speechContext: { phrases: hints }
           },
           interimResults: false,
           singleUtterance: true
@@ -108,14 +109,14 @@ function detectSpeech (micStream, callback) {
 
 function oneshot (callback) {
   const micStream = record.start();
-  detectSpeech(micStream, callback);
+  detectSpeech(micStream, [], callback);
 }
 
-function hotword (callback) {
+function hotword (hints, callback) {
   const models = new snowboy.Models();
   models.add({
-    file: 'resources/alexa.umdl',
-    hotwords: 'alexa'
+    file: 'resources/panda.umdl',
+    hotwords: 'panda'
   });
   const detector = new snowboy.Detector({
     resource: 'resources/common.res',
@@ -126,10 +127,10 @@ function hotword (callback) {
   console.log('Listening for hotword');
   detector.on('hotword', (index, hotword) => {
     console.log(hotword);
-    if (hotword === 'alexa') {
+    if (hotword === 'panda') {
       playSound('activated');
       micStream.unpipe(detector); // stop listening for hotword in case the user says it in his query
-      detectSpeech(micStream, (err, transcript) => {
+      detectSpeech(micStream, hints, (err, transcript) => {
         micStream.pipe(detector); // start listening for hotword again
         callback(err, transcript);
       });
