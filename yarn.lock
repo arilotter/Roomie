@@ -12,6 +12,10 @@ ansi-styles@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-2.2.1.tgz#b432dd3358b634cf75e1e4664368240533c1ddbe"
 
+apiai:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/apiai/-/apiai-3.0.2.tgz#fd7a2a5f6cff47a6602e14c55fcc45b9bbcb33cd"
+
 aproba@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/aproba/-/aproba-1.0.4.tgz#2713680775e7614c8ba186c065d4e2e52d1072c0"

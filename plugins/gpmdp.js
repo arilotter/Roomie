@@ -14,14 +14,14 @@ function init () {
     some(hosts, (host, cb) => {
       fs.readFile(getCodeFile(host), 'utf8', (err, authCode) => {
         if (err) console.warn('GPMDP: No auth code saved, will request one.');
-        server = initWebSocket(authCode, host, () => cb(true), () => cb(false));
+        server = initWebSocket(authCode, host, () => cb(host), () => cb());
       });
-    }, (madeConnection) => {
-      if (!madeConnection) {
+    }, (host) => {
+      if (!host) {
         console.log('GPMDP: no servers');
         resolve();
       } else {
-        console.log('GPMDP: Connected successfully');
+        console.log('GPMDP: Connected to ' + host);
         resolve();
       }
     });
@@ -30,10 +30,8 @@ function init () {
   function initWebSocket (authCode, host, success, fail) {
     let requestID = 1;
     const promises = {};
-    console.log('GPMDP: attempting connection to ' + host);
     let ws = new WebSocket('ws://' + host + ':5672/');
     const cancel = () => {
-      console.log('killing ws connection');
       ws.terminate();
       fail();
     };
@@ -127,9 +125,10 @@ function play (cb) {
 function playSearch (query, cb) {
   server.sendRequest('search', 'performSearch', [query.replace('designer', 'desiigner')]).then(message => {
     const search = message.value;
-    const finish = err => cb(null, !err);
-    if (!search || Object.keys(search).length === 0) return finish(true);
+    const finish = err => cb(err);
+    if (!search || Object.keys(search).length === 0) return cb(new Error('No matching music entities'));
     const trackMatches = (trackEntity, query) => {
+      console.log(trackEntity, query);
       if (!trackEntity) {
         return false;
       }
@@ -154,42 +153,29 @@ function playSearch (query, cb) {
   });
 }
 
-const controlEndings = ['', ' music', ' the music', ' my music'];
 module.exports = {
   init,
   destroy: () => server.close(), // destroy server if it exists
   commands: [
     // Play a music entity or plays whatever is active
-    (command, cb) => {
-      let start;
-      if (controlEndings.map(x => 'play' + x).some(x => command === x)) {
-        play(cb);
-      } else if (['play', 'listen to', 'play me', 'play me some', 'play songs by'].some(x => {
-        if (command.startsWith(x)) {
-          start = x;
-          return true;
+    ['music_play', (params, callback) => {
+      const artist = params['music-artist'];
+      const song = params['music-song'];
+      if (artist || song) {
+        playSearch(artist + ' ' + song, callback);
+      } else {
+        play(callback);
+      }
+    }],
+    ['music_pause', (_, callback) => {
+      server.sendRequest('playback', 'getPlaybackState').then(playbackState => {
+        if (playbackState.value === 2) {
+          server.sendRequest('playback', 'playPause', err => callback(err));
+        } else {
+          callback();
         }
-      })) {
-        playSearch(command.slice(start.length + 1), cb); // length + 1 for a space
-      } else {
-        cb(null, false);
-      }
-    },
-
-    // Pauses the music
-    (command, cb) => {
-      if (['pause', 'paws', 'pawn', 'Mazda', 'cause'].map(start => controlEndings.map(end => start + end)).reduce((a, b) => a.concat(b), []).some(x => command === x)) {
-        server.sendRequest('playback', 'getPlaybackState').then(ret => {
-          if (ret.value === 2) {
-            server.sendRequest('playback', 'playPause', (err) => cb(err, !err));
-          } else {
-            cb(null, true);
-          }
-        });
-      } else {
-        cb(null, false);
-      }
-    }
+      });
+    }]
   ]
 };
 
