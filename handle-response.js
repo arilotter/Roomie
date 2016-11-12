@@ -2,7 +2,7 @@ const Speaker = require('speaker');
 const opus = require('node-opus');
 const ogg = require('ogg');
 
-function handleCommandResponse (data) {
+function handleCommandResponse (data, callback) {
   if (!data) return;
   if (data.pipe) { // data is pipable, therefore probably a stream. For now, assume it's Ogg Opus
     const speaker = new Speaker({
@@ -15,6 +15,7 @@ function handleCommandResponse (data) {
       opusDecoder.on('format', format => {
         // Audio ready
         opusDecoder.pipe(speaker);
+        opusDecoder.on('finish', callback);
       });
       opusDecoder.on('error', console.log);
       stream.pipe(opusDecoder);
@@ -24,6 +25,7 @@ function handleCommandResponse (data) {
   } else {
     // TODO Here, use a TTS engine to create an audio stream, and pass that back into handleCommandResponse.
     console.log(data);
+    callback();
   }
 }
 module.exports = handleCommandResponse;

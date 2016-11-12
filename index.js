@@ -1,7 +1,9 @@
+const apiai = require('apiai');
+const Sonus = require('sonus');
+
 const credentials = require('./credentials.json');
 const playSound = require('./play-sound');
 const handleCommandResponse = require('./handle-response');
-const apiai = require('apiai');
 
 const plugins = ['gpmdp', 'memesounds', 'google'].map(name => require('./plugins/' + name));
 
@@ -10,22 +12,31 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ =>
   const commands = [];
   plugins.forEach(plugin => commands.push(...plugin.commands));
   const app = apiai(credentials.apiai);
-  const hints = [].concat(...plugins.filter(plugin => plugin.hints).map(plugin => plugin.hints));
+  // const hints = [].concat(...plugins.filter(plugin => plugin.hints).map(plugin => plugin.hints));
 
   // input method: speech or text
   const textinput = process.argv.slice(2);
-  let ime;
+  let inputMethod;
   if (textinput.length > 0) {
-    ime = cb => cb(null, {transcript: textinput.join(' '), confidence: 1.0});
+    inputMethod = cb => cb(null, {transcript: textinput.join(' '), confidence: 1.0});
   } else {
-    ime = require('./speech');
+    const speech = require('@google-cloud/speech')({
+      projectId: 'api-project-590894355361',
+      keyFilename: './google-credentials.json'
+    });
+    const hotwords = [{file: 'resources/panda.umdl', hotword: 'panda'}];
+    inputMethod = Sonus.init({hotwords}, speech);
+    Sonus.start(inputMethod);
   }
 
-  ime(hints, (err, speech) => {
-    if (err) throw err;
-    if (!speech.transcript) return;
-    console.info(`Query: "${speech.transcript}"`);
-    const aiRequest = app.textRequest(speech.transcript);
+  inputMethod.on('hotword', (index, keyword) => {
+    playSound('activated');
+  });
+
+  inputMethod.on('final-result', transcript => {
+    Sonus.stop();
+    console.info(`Query: "${transcript}"`);
+    const aiRequest = app.textRequest(transcript);
     aiRequest.on('response', response => {
       const result = response.result;
 
@@ -37,10 +48,12 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ =>
       options.inputQuery = result.resolvedQuery;
       console.log(`| ${command[0]} -> ${JSON.stringify(options)}\n`);
       command[1](options, (err, commandResponse) => {
+        // Restart listening
+        const restartListening = _ => Sonus.start(inputMethod);
         if (err) {
-          return failCommand(err);
+          return failCommand(err, restartListening);
         }
-        handleCommandResponse(commandResponse);
+        handleCommandResponse(commandResponse, restartListening);
       });
     });
     aiRequest.end();
