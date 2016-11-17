@@ -34,10 +34,13 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ =>
   });
 
   inputMethod.on('final-result', transcript => {
-    Sonus.stop();
+    Sonus.pause(inputMethod);
     console.info(`Query: "${transcript}"`);
-    const aiRequest = app.textRequest(transcript);
-    aiRequest.on('response', response => {
+    const nlpRequest = app.textRequest(transcript);
+    nlpRequest.on('error', err => {
+      console.log(err);
+    });
+    nlpRequest.on('response', response => {
       const result = response.result;
 
       const command = commands.find(command => command[0] === result.action);
@@ -49,21 +52,20 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ =>
       console.log(`| ${command[0]} -> ${JSON.stringify(options)}\n`);
       command[1](options, (err, commandResponse) => {
         // Restart listening
-        const restartListening = _ => Sonus.start(inputMethod);
         if (err) {
-          return failCommand(err, restartListening);
+          return failCommand(err);
         }
-        handleCommandResponse(commandResponse, restartListening);
+        handleCommandResponse(commandResponse, _ => Sonus.resume(inputMethod));
       });
     });
-    aiRequest.end();
+    nlpRequest.end();
   });
+  function failCommand (err) {
+    playSound('fail');
+    console.log(err);
+    Sonus.resume(inputMethod);
+  }
 });
-
-function failCommand (err) {
-  playSound('fail');
-  console.log(err);
-}
 
 // Ctrl-C should always work
 process.on('SIGINT', _ => {
