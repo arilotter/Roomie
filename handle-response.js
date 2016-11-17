@@ -5,10 +5,7 @@ const ogg = require('ogg');
 function handleCommandResponse (data, callback) {
   if (!data) return;
   if (data.pipe) { // data is pipable, therefore probably a stream. For now, assume it's Ogg Opus
-    const speaker = new Speaker({
-      sampleRate: 24000,
-      channels: 1
-    });
+    const speaker = new Speaker();
     const oggDecoder = new ogg.Decoder();
     oggDecoder.on('stream', stream => {
       const opusDecoder = new opus.Decoder();

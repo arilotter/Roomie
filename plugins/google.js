@@ -21,9 +21,9 @@ module.exports = {
         });
         result.on('end', _ => {
           const ttsBody = ttsRegex.exec(body);
-          if (!ttsBody) return callback(new Error('no tts data returned'));
+          if (!ttsBody) return callback('no tts data!');
           const ttsEncodedData = ttsBody[1];
-          if (!ttsEncodedData) return callback(new Error('no tts data returned'));
+          if (!ttsEncodedData) return callback('no tts data!');
           const ttsBuffer = Buffer.from(ttsEncodedData, 'base64');
           const ttsStream = new stream.PassThrough();
           ttsStream.end(ttsBuffer);
