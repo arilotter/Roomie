@@ -38,7 +38,7 @@ Promise.all(plugins.map(plugin => plugin.init ? plugin.init() : true)).then(_ =>
     console.info(`Query: "${transcript}"`);
     apiai.textRequest(transcript, apiaiSession)
     .on('error', err => {
-      console.log(err);
+      failCommand(err);
     })
     .on('response', response => {
       const result = response.result;
